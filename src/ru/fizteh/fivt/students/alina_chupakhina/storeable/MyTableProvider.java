@@ -138,4 +138,10 @@ public class MyTableProvider implements TableProvider {
         List<Object> lo = new ArrayList<>(values);
         return new Record(lo, ((MyTable)table).signature);
     }
+
+    @Override
+    public List<String> getTableNames() {
+        List<String> tablesNames = new ArrayList<>(tableList.keySet());
+        return tablesNames;
+    }
 }
