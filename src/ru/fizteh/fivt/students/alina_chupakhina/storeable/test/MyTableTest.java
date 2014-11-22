@@ -57,7 +57,7 @@ public class MyTableTest {
         obj.add(true);
         uncorrectStoreable = new Record(obj, sig);
         test = new MyTable(tableName, testDir, sig);
-        ((MyTable)test).tp = new MyTableProvider(testDir);
+        ((MyTable) test).tp = new MyTableProvider(testDir);
     }
 
     @Test

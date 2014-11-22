@@ -18,7 +18,7 @@ import static ru.fizteh.fivt.students.alina_chupakhina.storeable.TableSerializer
 public class MyTable implements Table {
 
     public TableProvider tp;
-    public List<Class<?> > signature;
+    public List<Class<?>> signature;
     private Map<String, Storeable> allRecords;
     private Map<String, Storeable> sessionChanges;
     public int unsavedChangesCounter;
@@ -26,7 +26,7 @@ public class MyTable implements Table {
     public String path;
     private File table;
     public int numberOfElements;
-    public int ColumnsCount;
+    public int columnsCount;
     private static final int NUMBER_OF_FILE = 16;
     private static final int NUMBER_OF_DIR = 16;
     private static final String ENCODING = "UTF-8";
@@ -41,7 +41,7 @@ public class MyTable implements Table {
         unsavedChangesCounter = 0;
         if (columnTypes != null) {
             signature = new ArrayList<>(columnTypes);
-            ColumnsCount = signature.size();
+            columnsCount = signature.size();
         } else {
             signature = new ArrayList<>();
         }
@@ -63,7 +63,7 @@ public class MyTable implements Table {
         if (key == null || value == null) {
             throw new IllegalArgumentException("Key or value is a null-string");
         }
-        Record s = (Record)sessionChanges.put(key, value);
+        Record s = (Record) sessionChanges.put(key, value);
         if (s != null) {
             return s;
         } else {
@@ -82,11 +82,11 @@ public class MyTable implements Table {
      * @throws IllegalArgumentException Если значение параметра key является null.
      */
     @Override
-    public Storeable remove(String key){
+    public Storeable remove(String key) {
         if (key == null) {
             throw new IllegalArgumentException("Key is a null-string");
         }
-        Record s = (Record)sessionChanges.remove(key);
+        Record s = (Record) sessionChanges.remove(key);
         if (s != null) {
             unsavedChangesCounter++;
             numberOfElements--;
@@ -127,7 +127,7 @@ public class MyTable implements Table {
         try {
             for (Map.Entry<String, Storeable> i : sessionChanges.entrySet()) {
                 key = i.getKey();
-                value = (Record)i.getValue();
+                value = (Record) i.getValue();
                 Integer ndirectory = Math.abs(key.getBytes("UTF-8")[0] % NUMBER_OF_DIR);
                 Integer nfile = Math.abs((key.getBytes("UTF-8")[0] / NUMBER_OF_FILE) % NUMBER_OF_FILE);
                 String pathToDir = path + File.separator + ndirectory.toString()
@@ -286,7 +286,7 @@ public class MyTable implements Table {
             out.print(classToString(type));
             out.print("\t");
         }
-        ColumnsCount = signature.size();
+        columnsCount = signature.size();
         out.close();
     }
 
@@ -300,7 +300,7 @@ public class MyTable implements Table {
         } catch (Exception e) {
             throw new IOException(tableName + ": No signature file or it's empty");
         }
-        ColumnsCount = signature.size();
+        columnsCount = signature.size();
     }
 
     /**
@@ -322,8 +322,8 @@ public class MyTable implements Table {
      * @return Количество колонок в таблице.
      */
     @Override
-    public int getColumnsCount(){
-        return ColumnsCount;
+    public int getColumnsCount() {
+        return columnsCount;
     }
 
     /**
@@ -349,7 +349,7 @@ public class MyTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Key is a null-string");
         }
-        Record s = (Record)sessionChanges.get(key);
+        Record s = (Record) sessionChanges.get(key);
         return s;
     }
 

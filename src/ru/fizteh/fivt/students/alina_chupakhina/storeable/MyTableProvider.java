@@ -108,7 +108,7 @@ public class MyTableProvider implements TableProvider {
                     Main.tp.currentTable = null;
                 }
             }
-            MyTable t = (MyTable)Main.tp.tableList.get(name);
+            MyTable t = (MyTable) Main.tp.tableList.get(name);
             Main.tp.tableList.remove(name);
             t.rm();
             table.delete();
@@ -118,7 +118,7 @@ public class MyTableProvider implements TableProvider {
     @Override
     public Storeable deserialize(Table table, String value) throws ParseException {
         //ts = new TableSerializer();
-        return ts.deserialize(table, value, ((MyTable)table).signature);
+        return ts.deserialize(table, value, ((MyTable) table).signature);
     }
 
     @Override
@@ -130,13 +130,13 @@ public class MyTableProvider implements TableProvider {
     @Override
     public Storeable createFor(Table table) {
         List<Object> lo = new ArrayList<>();
-        return new Record(lo, ((MyTable)table).signature);
+        return new Record(lo, ((MyTable) table).signature);
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
         List<Object> lo = new ArrayList<>(values);
-        return new Record(lo, ((MyTable)table).signature);
+        return new Record(lo, ((MyTable) table).signature);
     }
 
     @Override

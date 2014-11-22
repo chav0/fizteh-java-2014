@@ -142,7 +142,7 @@ public class Interpreter {
         if (types.length == 0) {
             throw new Exception("wrong type (empty type is not allowed)");
         }
-        MyTable t = (MyTable)tp.createTable(args[1], signature);
+        MyTable t = (MyTable) tp.createTable(args[1], signature);
         t.writeSignature();
         if (t != null) {
             System.out.println("created");
@@ -170,7 +170,7 @@ public class Interpreter {
             if (tp.currentTable != null && tp.currentTable.unsavedChangesCounter > 0) {
                 System.out.println(tp.currentTable.unsavedChangesCounter + " unsaved changes");
             } else {
-                tp.currentTable = (MyTable)tp.tableList.get(args[1]);
+                tp.currentTable = (MyTable) tp.tableList.get(args[1]);
                 System.out.println("using " + args[1]);
             }
         }

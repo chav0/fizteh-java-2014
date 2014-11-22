@@ -116,7 +116,7 @@ public class TableSerializer {
 
     public String serialize(Table table, Storeable value) {
         int c = table.getColumnsCount();
-        if (c != ((Record)value).getColumnsNum()) {
+        if (c != ((Record) value).getColumnsNum()) {
             throw new ColumnFormatException("column count mismatch");
         }
         StringBuilder sb = new StringBuilder("[");

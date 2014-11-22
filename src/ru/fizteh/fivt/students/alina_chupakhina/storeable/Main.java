@@ -14,7 +14,7 @@ public class Main {
             //path = System.getProperty("fizteh.db.dir");
             path = "C:\\Ololo";
             MyTableProviderFactory tpf = new MyTableProviderFactory();
-            tp = (MyTableProvider)tpf.create(path);
+            tp = (MyTableProvider) tpf.create(path);
 
             if (path == null) {
                 throw new Exception("Enter directory");
