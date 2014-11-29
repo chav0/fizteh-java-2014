@@ -20,10 +20,8 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class MyTableProviderTest {
-    //private final Path testDirectory
-            //= Paths.get(System.getProperty("java.io.tmpdir"));
     private final Path testDirectory
-            = Paths.get("C:\\Ololo\\Tests");
+            = Paths.get(System.getProperty("java.io.tmpdir"));
     private final String testTableName = "testTable";
     private final String fileInTableDirectory = "unnecessaryFiles";
     private List<Class<?>> sig;

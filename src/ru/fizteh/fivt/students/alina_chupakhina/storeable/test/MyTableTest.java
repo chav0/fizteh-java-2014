@@ -23,8 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 public class MyTableTest {
 
-    //private final String testDir = System.getProperty("java.io.tmpdir") + File.separator + "DbTestDir";
-    private final String testDir = "C:\\Ololo\\DbTestDir";
+    private final String testDir = System.getProperty("java.io.tmpdir") + File.separator + "DbTestDir";
     private final String tableName = "table1";
     private final int dirNumber = 1;
     private final int fileNumber = 1;

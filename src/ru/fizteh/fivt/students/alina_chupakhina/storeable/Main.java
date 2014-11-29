@@ -11,8 +11,7 @@ public class Main {
 
     public static void main(final String[] args) {
         try {
-            //path = System.getProperty("fizteh.db.dir");
-            path = "C:\\Ololo";
+            path = System.getProperty("fizteh.db.dir");
             MyTableProviderFactory tpf = new MyTableProviderFactory();
             tp = (MyTableProvider) tpf.create(path);
 

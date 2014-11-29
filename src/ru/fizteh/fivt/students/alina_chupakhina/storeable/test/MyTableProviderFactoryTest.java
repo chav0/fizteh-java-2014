@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 public class MyTableProviderFactoryTest {
 
     private final Path testDirectory
-            = Paths.get("C:\\Ololo\\Tests");
+            = Paths.get(System.getProperty("java.io.tmpdir"));
 
     @Before
     public final void setUp()
