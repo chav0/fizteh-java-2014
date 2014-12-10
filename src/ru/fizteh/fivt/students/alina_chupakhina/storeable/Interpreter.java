@@ -208,11 +208,11 @@ public class Interpreter {
     public static void showTables(final String[] args) throws Exception {
         if (args.length >= 2) {
             if (!args[1].equals("tables")) {
-                throw new Exception("Invalid command");
+                throw new Exception(args[0] + " " + args[1] + " - invalid command");
             }
         }
         if (args.length == 1) {
-            throw new Exception("Invalid command");
+            throw new Exception(args[0] + " - invalid command");
         }
         checkNumOfArgs("show tables", 2, args.length);
         System.out.println("table_name row_count");

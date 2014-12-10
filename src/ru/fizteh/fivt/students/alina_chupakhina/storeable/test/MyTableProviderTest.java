@@ -23,7 +23,6 @@ public class MyTableProviderTest {
     private final Path testDirectory
             = Paths.get(System.getProperty("java.io.tmpdir"));
     private final String testTableName = "testTable";
-    private final String fileInTableDirectory = "unnecessaryFiles";
     private List<Class<?>> sig;
     private List<Object> obj;
     private String s = "[1,\"1\"]";
@@ -46,7 +45,7 @@ public class MyTableProviderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public final void testCreateTableProvaderWithNullDirectoryName() {
-        TableProvider pv = new MyTableProvider(null);
+        new MyTableProvider(null);
     }
 
     @Test(expected = IllegalArgumentException.class)

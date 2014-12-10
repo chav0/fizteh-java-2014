@@ -26,7 +26,7 @@ public class Main {
             for (File child : children) {
                 MyTable t = new MyTable(child.getName(), path, null);
                 t.load();
-                tp.tableList.put(child.getName(), t);
+                MyTableProvider.tableList.put(child.getName(), t);
             }
             Mode mode = new Mode();
             if (args.length > 0) {

@@ -67,13 +67,13 @@ public class TableSerializer {
             } else if (string.trim().toLowerCase().equals("false")) {
                 return false;
             }
-            throw new Exception("not a valid boolean value");
+            throw new Exception("invalid boolean value");
         });
         readerMap.put(String.class, string -> {
             if (string.length() > 1 && string.charAt(0) == '"' && string.charAt(string.length() - 1) == '"') {
                 return string.substring(1, string.length() - 1);
             }
-            throw new Exception("not a valid String value");
+            throw new Exception("invalid String value");
         });
 
         writerMap.put(Integer.class, Object::toString);
@@ -107,14 +107,14 @@ public class TableSerializer {
                     values.add(readerMap.get(table.getColumnType(i)).getObject(tokens[i].trim()));
                 }
             } catch (Exception e) {
-                throw new ParseException("not a valid " + classToString(table.getColumnType(i))
+                throw new ParseException("invalid " + classToString(table.getColumnType(i))
                         + " value", 0);
             }
         }
         return new Record(values, signature);
     }
 
-    public String serialize(Table table, Storeable value) {
+    public static String serialize(Table table, Storeable value) {
         int c = table.getColumnsCount();
         if (c != ((Record) value).getColumnsNum()) {
             throw new ColumnFormatException("column count mismatch");

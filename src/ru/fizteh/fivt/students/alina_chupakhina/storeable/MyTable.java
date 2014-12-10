@@ -10,7 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static ru.fizteh.fivt.students.alina_chupakhina.storeable.TableSerializer.classToString;
 import static ru.fizteh.fivt.students.alina_chupakhina.storeable.TableSerializer.stringToClass;
@@ -20,7 +21,10 @@ public class MyTable implements Table {
     public TableProvider tp;
     public List<Class<?>> signature;
     private Map<String, Storeable> allRecords;
-    private Map<String, Storeable> sessionChanges;
+    final ThreadLocal<Map<String, Storeable>> sessionChanges =
+                        ThreadLocal.withInitial(()-> new HashMap<>());
+    private ReadWriteLock tableOperationsLock =  new ReentrantReadWriteLock(true);
+    //private Map<String, Storeable> sessionChanges;
     public int unsavedChangesCounter;
     public String tableName;
     public String path;
@@ -31,10 +35,11 @@ public class MyTable implements Table {
     private static final int NUMBER_OF_DIR = 16;
     private static final String ENCODING = "UTF-8";
 
+
     public MyTable(String name, String pathname, List<Class<?>> columnTypes) {
         tp = Main.tp;
         allRecords = new TreeMap<>();
-        sessionChanges = new TreeMap<>();
+        //sessionChanges = new TreeMap<>();
         path = pathname + File.separator + name;
         table = new File(path);
         tableName = name;
@@ -63,13 +68,18 @@ public class MyTable implements Table {
         if (key == null || value == null) {
             throw new IllegalArgumentException("Key or value is a null-string");
         }
-        Record s = (Record) sessionChanges.put(key, value);
-        if (s != null) {
-            return s;
-        } else {
-            unsavedChangesCounter++;
-            numberOfElements++;
-            return null;
+        tableOperationsLock.readLock().lock();
+        try {
+            Record s = (Record) sessionChanges.get().put(key, value);
+            if (s != null) {
+                return s;
+            } else {
+                unsavedChangesCounter++;
+                numberOfElements++;
+                return null;
+            }
+        } finally {
+            tableOperationsLock.readLock().unlock();
         }
     }
 
@@ -86,13 +96,18 @@ public class MyTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Key is a null-string");
         }
-        Record s = (Record) sessionChanges.remove(key);
-        if (s != null) {
-            unsavedChangesCounter++;
-            numberOfElements--;
-            return s;
-        } else {
-            return null;
+        tableOperationsLock.readLock().lock();
+        try {
+            Record s = (Record) sessionChanges.get().remove(key);
+            if (s != null) {
+                unsavedChangesCounter++;
+                numberOfElements--;
+                return s;
+            } else {
+                return null;
+            }
+        } finally {
+            tableOperationsLock.readLock().unlock();
         }
     }
 
@@ -107,9 +122,14 @@ public class MyTable implements Table {
 
     @Override
     public List<String> list() {
-        Set<String> keySet = sessionChanges.keySet();
-        List<String> list = keySet.stream().collect(Collectors.toCollection(() -> new LinkedList()));
-        return list;
+        tableOperationsLock.readLock().lock();
+        try {
+            List<String> list = new ArrayList<>();
+            list.addAll(sessionChanges.get().keySet());
+            return list;
+        } finally {
+            tableOperationsLock.readLock().unlock();
+        }
     }
 
     /**
@@ -120,42 +140,48 @@ public class MyTable implements Table {
      * @throws java.io.IOException если произошла ошибка ввода/вывода. Целостность таблицы не гарантируется.
      */
     public int commit() throws IOException {
-        String key;
-        Record value;
-        rm();
-        writeSignature();
+        int n;
+        tableOperationsLock.writeLock().lock();
         try {
-            for (Map.Entry<String, Storeable> i : sessionChanges.entrySet()) {
-                key = i.getKey();
-                value = (Record) i.getValue();
-                Integer ndirectory = Math.abs(key.getBytes("UTF-8")[0] % NUMBER_OF_DIR);
-                Integer nfile = Math.abs((key.getBytes("UTF-8")[0] / NUMBER_OF_FILE) % NUMBER_OF_FILE);
-                String pathToDir = path + File.separator + ndirectory.toString()
-                        + ".dir";
-                //System.out.println(pathToDir);
-                File file = new File(pathToDir);
-                if (!file.exists()) {
-                    file.mkdir();
+            rm();
+            writeSignature();
+            try {
+                for (Map.Entry<String, Storeable> i : sessionChanges.get().entrySet()) {
+                    String key;
+                    Record value;
+                    key = i.getKey();
+                    value = (Record) i.getValue();
+                    Integer ndirectory = Math.abs(key.getBytes("UTF-8")[0] % NUMBER_OF_DIR);
+                    Integer nfile = Math.abs((key.getBytes("UTF-8")[0] / NUMBER_OF_FILE) % NUMBER_OF_FILE);
+                    String pathToDir = path + File.separator + ndirectory.toString()
+                            + ".dir";
+                    //System.out.println(pathToDir);
+                    File file = new File(pathToDir);
+                    if (!file.exists()) {
+                        file.mkdir();
+                    }
+                    String pathToFile = path + File.separator + ndirectory.toString()
+                            + ".dir" + File.separator + nfile.toString() + ".dat";
+                    //System.out.println(pathToFile);
+                    file = new File(pathToFile);
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    DataOutputStream outStream = new DataOutputStream(
+                            new FileOutputStream(pathToFile, true));
+                    writeValue(outStream, key, value);
+                    outStream.close();
                 }
-                String pathToFile = path + File.separator + ndirectory.toString()
-                        + ".dir" + File.separator + nfile.toString() + ".dat";
-                //System.out.println(pathToFile);
-                file = new File(pathToFile);
-                if (!file.exists()) {
-                    file.createNewFile();
-                }
-                DataOutputStream outStream = new DataOutputStream(
-                        new FileOutputStream(pathToFile, true));
-                writeValue(outStream, key, value);
-                outStream.close();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+                System.exit(-1);
             }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
+            allRecords = new TreeMap<>(sessionChanges.get());
+            n = unsavedChangesCounter;
+            unsavedChangesCounter = 0;
+        } finally {
+            tableOperationsLock.writeLock().unlock();
         }
-        allRecords = new TreeMap<>(sessionChanges);
-        int n = unsavedChangesCounter;
-        unsavedChangesCounter = 0;
         return n;
     }
 
@@ -213,46 +239,53 @@ public class MyTable implements Table {
             throw new NullPointerException("Directory name is null");
         }
         readSignature();
+        tableOperationsLock.writeLock().lock();
         try {
-            File[] dirs = table.listFiles();
-            for (File dir : dirs) {
-                if (!dir.isDirectory() && !dir.getName().equals("signature.tsv")) {
-                    System.err.println(dir.getName()
-                            + " is not directory");
-                    System.exit(-1);
-                }
-                if (!dir.getName().equals("signature.tsv")) {
-                    File[] dats = dir.listFiles();
-                    if (dats.length == 0) {
-                        System.err.println("Empty folders found");
+            try {
+                File[] dirs = table.listFiles();
+                for (File dir : dirs) {
+                    if (!dir.isDirectory() && !dir.getName().equals("signature.tsv") && !dir.isHidden()) {
+                        System.err.println(dir.getName()
+                                + " is not directory");
                         System.exit(-1);
                     }
-                    for (File dat : dats) {
-                        int nDirectory = Integer.parseInt(dir.getName().substring(0,
-                                dir.getName().length() - 4));
-                        int nFile = Integer.parseInt(dat.getName().substring(0,
-                                dat.getName().length() - 4));
-                        String key;
-                        Path file = Paths.get(dat.getAbsolutePath());
-                        try (DataInputStream fileStream = new DataInputStream(Files.newInputStream(file))) {
-                            while (fileStream.available() > 0) {
-                                key = readKeyValue(fileStream);
-                                if (!(nDirectory == Math.abs(key.getBytes(ENCODING)[0] % NUMBER_OF_DIR))
-                                        || !(nFile == Math.abs((key.getBytes(ENCODING)[0]
-                                        / NUMBER_OF_FILE) % NUMBER_OF_FILE))) {
-                                    System.err.println("Error while reading table " + tableName);
-                                    System.exit(-1);
+                    if (!dir.getName().equals("signature.tsv") && !dir.isHidden()) {
+                        File[] dats = dir.listFiles();
+                        if (dats.length == 0) {
+                            System.err.println("Empty folders found");
+                            System.exit(-1);
+                        }
+                        for (File dat : dats) {
+                            if (!dat.isHidden()) {
+                                int nDirectory = Integer.parseInt(dir.getName().substring(0,
+                                        dir.getName().length() - 4));
+                                int nFile = Integer.parseInt(dat.getName().substring(0,
+                                        dat.getName().length() - 4));
+                                String key;
+                                Path file = Paths.get(dat.getAbsolutePath());
+                                try (DataInputStream fileStream = new DataInputStream(Files.newInputStream(file))) {
+                                    while (fileStream.available() > 0) {
+                                        key = readKeyValue(fileStream);
+                                        if (!(nDirectory == Math.abs(key.getBytes(ENCODING)[0] % NUMBER_OF_DIR))
+                                                || !(nFile == Math.abs((key.getBytes(ENCODING)[0]
+                                                / NUMBER_OF_FILE) % NUMBER_OF_FILE))) {
+                                            System.err.println("Error while reading table " + tableName);
+                                            System.exit(-1);
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+                System.exit(-1);
             }
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
+        } finally {
+            tableOperationsLock.writeLock().unlock();
         }
-        sessionChanges = new TreeMap<>(allRecords);
+        sessionChanges.set(allRecords);
     }
 
     private String readKeyValue(DataInputStream is) throws Exception {
@@ -303,16 +336,23 @@ public class MyTable implements Table {
         columnsCount = signature.size();
     }
 
+
     /**
      * Выполняет откат изменений с момента последней фиксации.
      *
      * @return Число откаченных изменений.
      */
     public int rollback() {
-        sessionChanges = new HashMap<>(allRecords);
-        int n = unsavedChangesCounter;
-        unsavedChangesCounter = 0;
-        numberOfElements = allRecords.size();
+        int n;
+        tableOperationsLock.readLock().lock();
+        try {
+            sessionChanges.set(allRecords);
+            n = unsavedChangesCounter;
+            unsavedChangesCounter = 0;
+            numberOfElements = allRecords.size();
+        } finally {
+            tableOperationsLock.readLock().unlock();
+        }
         return n;
     }
 
@@ -349,8 +389,13 @@ public class MyTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Key is a null-string");
         }
-        Record s = (Record) sessionChanges.get(key);
-        return s;
+        tableOperationsLock.readLock().lock();
+        try {
+            Record s = (Record) sessionChanges.get().get(key);
+            return s;
+        } finally {
+            tableOperationsLock.readLock().unlock();
+        }
     }
 
 

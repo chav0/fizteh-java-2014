@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Mode {
     public PrintStream out;
     public InputStream in;
-    public static final String WELLCOME = "$ ";
+    public static final String WELCOME = "$ ";
     public Mode(InputStream is, PrintStream ps) {
         out = ps;
         in = is;
@@ -17,9 +17,10 @@ public class Mode {
         in = System.in;
     }
     public void interactive() throws NullPointerException {
-        out.print(WELLCOME);
+        out.print(WELCOME);
         Scanner sc = new Scanner(in);
-        while (true) {
+        boolean flag = true;
+        while (flag) {
             try {
 
                 String[] s = sc.nextLine().trim().split(";");
@@ -29,13 +30,13 @@ public class Mode {
                 }
             } catch (Exception e) {
                 out.println(e.getMessage());
-
             }
-            out.print(WELLCOME);
+            out.print(WELCOME);
             if (!out.equals(System.out)) {
                 throw new NullPointerException();
             }
         }
+        sc.close();
     }
 
     public void batch(final String[] args) throws Exception {

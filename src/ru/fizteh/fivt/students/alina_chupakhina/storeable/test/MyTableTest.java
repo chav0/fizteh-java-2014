@@ -27,14 +27,12 @@ public class MyTableTest {
     private final String tableName = "table1";
     private final int dirNumber = 1;
     private final int fileNumber = 1;
-    private String correctKey;
     private final String testKey1 = "ключ1";
     private final String testKey2 = "ключ2";
     private static final int DIR_AMOUNT = 16;
     private static final int FILES_AMOUNT = 16;
     private Table test;
     private Storeable correctStoreable;
-    private Storeable uncorrectStoreable;
 
 
     @Before
@@ -42,7 +40,6 @@ public class MyTableTest {
         File dir = new File(testDir);
         dir.mkdir();
         byte[] b = {dirNumber + fileNumber * 16, 'k', 'e', 'y'};
-        correctKey = new String(b);
         String tableDirectoryPath = testDir + File.separator + tableName;
         File tableDir = new File(tableDirectoryPath);
         tableDir.mkdir();
@@ -54,7 +51,6 @@ public class MyTableTest {
         obj.add("1");
         correctStoreable = new Record(obj, sig);
         obj.add(true);
-        uncorrectStoreable = new Record(obj, sig);
         test = new MyTable(tableName, testDir, sig);
         ((MyTable) test).tp = new MyTableProvider(testDir);
     }

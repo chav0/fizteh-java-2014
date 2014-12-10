@@ -60,8 +60,8 @@ public class ModeTest {
         try {
             mode.interactive();
         } catch (NullPointerException e) {
-            assertEquals(Mode.WELLCOME + testCommand + Interpreter.MESSAGE_INVALID_COMMAND
-                    + newLine + Mode.WELLCOME, outputStream.toString());
+            assertEquals(Mode.WELCOME + testCommand + Interpreter.MESSAGE_INVALID_COMMAND
+                    + newLine + Mode.WELCOME, outputStream.toString());
         }
     }
 
@@ -72,8 +72,8 @@ public class ModeTest {
         try {
             mode.interactive();
         } catch (NullPointerException e) {
-            assertEquals(Mode.WELLCOME + "use" + Interpreter.MESSAGE_INVALID_NUMBER_OF_ARGUMENTS
-                    + newLine + Mode.WELLCOME, outputStream.toString());
+            assertEquals(Mode.WELCOME + "use" + Interpreter.MESSAGE_INVALID_NUMBER_OF_ARGUMENTS
+                    + newLine + Mode.WELCOME, outputStream.toString());
         }
     }
 
@@ -83,7 +83,7 @@ public class ModeTest {
         try {
             mode.interactive();
         } catch (NullPointerException e) {
-            assertEquals(Mode.WELLCOME + Mode.WELLCOME, outputStream.toString());
+            assertEquals(Mode.WELCOME + Mode.WELCOME, outputStream.toString());
         }
     }
 
